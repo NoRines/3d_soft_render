@@ -41,16 +41,11 @@ std::ostream &operator<<(std::ostream &os, const Vec2f &v) {
 
 std::optional<std::array<Vec4f, 3>>
 faceToCameraSpace(const Vec3f &pos0, const Vec3f &pos1, const Vec3f &pos2,
-                  const Mat4f &worldM, const Mat4f &viewM) {
-  // Apply the world matrix
-  const auto w0 = worldM * toVec4(pos0, 1.0f);
-  const auto w1 = worldM * toVec4(pos1, 1.0f);
-  const auto w2 = worldM * toVec4(pos2, 1.0f);
-
-  // Apply the view matrix
-  const auto v0 = viewM * w0;
-  const auto v1 = viewM * w1;
-  const auto v2 = viewM * w2;
+                  const Mat4f &worldViewM) {
+  // Apply the world and view matrix
+  const auto v0 = worldViewM * toVec4(pos0, 1.0f);
+  const auto v1 = worldViewM * toVec4(pos1, 1.0f);
+  const auto v2 = worldViewM * toVec4(pos2, 1.0f);
 
   const auto viewNormal =
       (toVec3(v1) - toVec3(v0)).cross(toVec3(v2) - toVec3(v0)).unit();
@@ -461,7 +456,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] const char **argv) {
         for (const auto &f : m) {
 
           if (const auto optCameraSpace = faceToCameraSpace(
-                  f[0].pos, f[1].pos, f[2].pos, worldM, viewM)) {
+                  f[0].pos, f[1].pos, f[2].pos, viewM * worldM)) {
             const auto &[c0, c1, c2] = optCameraSpace.value();
 
             // Clip with near plane
